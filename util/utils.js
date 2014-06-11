@@ -87,6 +87,8 @@ module.exports = (function() {
         },
 
         writeFileTo : function(/*String*/path, /*Buffer*/content, /*Boolean*/overwrite, /*Number*/attr) {
+            // fix: problem on unix environments with zip files on windows
+            path=path.replace(/\\/g,'/');
             if (fs.existsSync(path)) {
                 if (!overwrite)
                     return false; // cannot overwite
