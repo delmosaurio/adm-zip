@@ -34,7 +34,11 @@ module.exports = function (/*Buffer*/input) {
         return true;
     }
 
-    function decompress(/*Boolean*/async, /*Function*/callback) {
+    function decompress(/*Boolean*/async, /*Function*/callback, /*String*/pass) {
+        if(typeof callback === 'undefined' && typeof async === 'string') {
+            pass=async;
+            async=void 0;
+        }
         if (_isDirectory) {
             if (async && callback) {
                 callback(new Buffer(0), Utils.Errors.DIRECTORY_CONTENT_ERROR); //si added error.
@@ -43,6 +47,7 @@ module.exports = function (/*Buffer*/input) {
         }
 
         var compressedData = getCompressedDataFromZip();
+       
         if (compressedData.length == 0) {
             if (async && callback) callback(compressedData, Utils.Errors.NO_DATA);//si added error.
             return compressedData;
@@ -73,7 +78,7 @@ module.exports = function (/*Buffer*/input) {
                 } else {
                     inflater.inflateAsync(function(result) {
                         result.copy(data, 0);
-                        if (crc32OK(data)) {
+                        if (!crc32OK(data)) {
                             if (callback) callback(data, Utils.Errors.BAD_CRC); //si added error
                         } else { //si added otherwise did not seem to return data.
                             if (callback) callback(data);
@@ -232,13 +237,16 @@ module.exports = function (/*Buffer*/input) {
             }
         },
 
-        getData : function() {
-            return decompress(false, null);
+        getData : function(pass) {
+            return decompress(false, null, pass);
         },
 
-        getDataAsync : function(/*Function*/callback) {
-            decompress(true, callback)
+        getDataAsync : function(/*Function*/callback, pass) {
+            decompress(true, callback, pass)
         },
+
+        set attr(attr) { _entryHeader.attr = attr; },
+        get attr() { return _entryHeader.attr; },
 
         set header(/*Buffer*/data) {
             _entryHeader.loadFromBinary(data);
